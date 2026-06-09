@@ -10,9 +10,11 @@ This repository provides the complete pipeline to reproduce both PT2PR-Amazon an
 
 Python **3.12** is recommended.
 
-*Create and activate a virtual environment:*
+*Clone the repository, then create and activate a virtual environment:*
 
 ```bash
+git clone https://github.com/ds-jrg/PT2PR.git
+cd PT2PR
 python3 -m venv pt2pr_venv
 source pt2pr_venv/bin/activate
 pip install -r requirements.txt
@@ -54,10 +56,10 @@ Run the full pipeline for a single catalog with one command:
  
 ```bash
 # Amazon Reviews 2023
-python pipeline/run_pipeline.py --config pipeline/configs/amazon.yaml
+python -m pipeline.run_pipeline --config pipeline/configs/amazon.yaml
  
 # ESCI
-python pipeline/run_pipeline.py --config pipeline/configs/esci.yaml
+python -m pipeline.run_pipeline --config pipeline/configs/esci.yaml
 ```
  
 Individual steps can also be run standalone.
@@ -77,7 +79,7 @@ pipeline/checkpoints/<new_dataset>/step_03_manual_changes.jsonl
 Re-run the pipeline to continue from where it stopped, skipping the already-completed steps, e.g.:
  
 ```bash
-python pipeline/run_pipeline.py --config pipeline/configs/<new_dataset>.yaml --steps 3 4 5 6 7
+python -m pipeline.run_pipeline --config pipeline/configs/<new_dataset>.yaml --steps 3 4 5 6 7
 ```
  
 ---
