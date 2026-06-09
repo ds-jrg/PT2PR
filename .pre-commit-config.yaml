@@ -1,0 +1,15 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.9.1
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+        args:
+          - --max-line-length=170
+          - --ignore=E203,W503,E741,E731
+          - --exclude=pt2pr_venv,requirements.txt,README.md

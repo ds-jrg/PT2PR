@@ -1,0 +1,35 @@
+# Place the Amazon Reviews .jsonl.gz files under data/external/amazon/
+# before running: see README.md for instructions on obtaining the source files.
+
+dataset: amazon
+source:
+  input_dir: data/external/amazon
+  # The field in the source catalog that holds the product identifier.
+  # "parent_asin" is detected automatically; this is shown for documentation.
+  product_id_field: parent_asin
+
+paths:
+  raw_products:        data/raw/amazon/patented_products.jsonl
+  interim_pairs:       data/interim/amazon/patent_product_pairs.jsonl
+  pairs_with_kinds:    data/interim/amazon/patent_product_pairs_with_kind_codes.jsonl
+  patent_info:         data/interim/amazon/patent_product_with_patent_info.jsonl
+  patent_info_cleaned: data/interim/amazon/patent_product_with_patent_info_cleaned.jsonl
+  merged_dataset:      data/processed/amazon/full_patent_product_dataset.jsonl
+  merged_stats:        data/processed/amazon/stats/full_dataset_stats.json
+  examples:            data/processed/amazon/examples/example_set.json
+  patent_cache:        data/interim/patent_cache
+
+checkpoints:
+  step_02: pipeline/checkpoints/amazon/step_02_manual_changes.jsonl
+  step_03: pipeline/checkpoints/amazon/step_03_manual_changes.jsonl
+
+scraping:
+  kind_codes_batch_size: 300
+  kind_codes_max_workers: 5
+  patent_info_batch_size: 300
+  patent_info_max_workers: 5
+  request_delay: 2.0
+
+examples:
+  n: 20
+  seed: 42
