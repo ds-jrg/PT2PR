@@ -1,5 +1,4 @@
 # PT2PR: A Benchmark for Multimodal Patent-to-Product Retrieval
-
 A benchmark dataset for semantic and multimodal patent-to-product retrieval, constructed from the [Amazon Reviews 2023](https://amazon-reviews-2023.github.io/) and [ESCI](https://github.com/amazon-science/esci-data) product catalogs.
 
 This repository provides the complete pipeline to reproduce both PT2PR-Amazon and PT2PR-ESCI from scratch and run text and multimodal retrieval baselines. It can also be applied to any product catalog where products reference patent numbers.
@@ -7,7 +6,6 @@ This repository provides the complete pipeline to reproduce both PT2PR-Amazon an
 ## Prerequisites
 
 ### Environment Setup (Linux)
-
 Python **3.12** is recommended.
 
 *Clone the repository, then create and activate a virtual environment:*
@@ -21,37 +19,24 @@ pip install -r requirements.txt
 ```
 
 ### Data Acquisition
- 
 The source catalogs must be obtained and accepted under their respective licenses before running the pipeline.
 
 #### Amazon Reviews 2023
-
-1. Visit [Amazon Reviews 2023 website](https://amazon-reviews-2023.github.io/)
-2. Download the **metadata** (`meta` column) files for all categories into `data/external/amazon/`. Each file is named `meta_<Category>.jsonl.gz`.
-
-The direct download base URL is:
-```
-https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/meta_categories/meta_<Category>.jsonl.gz
-```
-Replace `<Category>` with the real category names from the website, e.g. `meta_All_Beauty.jsonl.gz`.
-
-#### ESCI
-
-1. Clone the [ESCI repository](https://github.com/amazon-science/esci-data)
-2. Locate `shopping_queries_dataset/shopping_queries_dataset_products.parquet`
-3. Convert it to the PT2PR pipeline's input format, using: 
+To download the Amazon Reviews dataset, do: 
 
 ```bash
-python scripts/convert_esci.py \
-    --products path/to/shopping_queries_dataset_products.parquet \
-    --output   data/external/esci/products.jsonl.gz
+bash scripts/download_amazon.sh
 ```
 
-This keeps only English (`product_locale == "us"`) products, drops duplicates, and maps ESCI fields to the pipeline input schema so the pipeline can process both the ESCI and Amazon Reviews 2023 catalogs identically.
+#### ESCI
+To download the ESCI dataset and convert it to the PT2PR pipeline format, do:
+
+```bash
+bash scripts/download_esci.sh
+```
 
 
 ### Reproducing PT2PR-Amazon and PT2PR-ESCI
-
 Run the full pipeline for a single catalog with one command:
  
 ```bash
@@ -66,14 +51,13 @@ Individual steps can also be run standalone.
 
 
 #### Manual review steps
+Steps 02 and 03 include a manual step. For PT2PR-Amazon and PT2PR-ESCI, the reviewed files are already committed to the repo (`pipeline/review_steps/`) and are applied automatically. The pipeline replaces the automatic extraction output with the manually verified file, ensuring reproducibility.
  
-Steps 02 and 03 include a manual review checkpoint. For PT2PR-Amazon and PT2PR-ESCI, the checkpoint files are already committed to the repo (`pipeline/checkpoints/`) and are applied automatically. The pipeline replaces the automatic extraction output with the manually verified file, ensuring reproducibility.
- 
-For a **new dataset**, the pipeline will pause at steps 02 and 03, write the automatic extraction output to the interim path, and print instructions. Review and correct the output, then save it as the checkpoint:
+For a **new dataset**, the pipeline will pause at steps 02 and 03, write the automatic extraction output to the interim path, and print instructions. Review and correct the output, then save it as:
  
 ```
-pipeline/checkpoints/<new_dataset>/step_02_manual_changes.jsonl
-pipeline/checkpoints/<new_dataset>/step_03_manual_changes.jsonl
+pipeline/review_steps/<new_dataset>/step_02_manual_changes.jsonl
+pipeline/review_steps/<new_dataset>/step_03_manual_changes.jsonl
 ```
  
 Re-run the pipeline to continue from where it stopped, skipping the already-completed steps, e.g.:
@@ -91,8 +75,8 @@ The pipeline constructs a patent-product pair dataset through five preprocessing
 | Step | Script | Function |
 | --- | --- | --- |
 | 01 | `extract_raw_data.py` | Scans `.jsonl.gz` catalog files. Extracts products that mention a patent number in their text. |
-| 02 | `extract_interim_pairs.py` | Parses patent numbers from text spans to form `(product, patent)` pairs. Extracts country code, kind code, and surrounding text. **Manual checkpoint**: correct extraction errors, remove spurious pairs. |
-| 03 | `extract_kind_codes.py` | Fetches patent kind codes (A1, B2, S1, …) from Google Patents for each unique `(country, patent_number)` pair. **Manual checkpoint**: correct if possible or remove mismatched pairs. |
+| 02 | `extract_interim_pairs.py` | Parses patent numbers from text spans to form `(product, patent)` pairs. Extracts country code, kind code, and surrounding text. **Manual review**: correct extraction errors, remove spurious pairs. |
+| 03 | `extract_kind_codes.py` | Fetches patent kind codes (A1, B2, S1, …) from Google Patents for each unique `(country, patent_number)` pair. **Manual review**: correct if possible or remove mismatched pairs. |
 | 04 | `extract_patent_info.py` | Fetches full patent metadata from Google Patents. Results are cached locally. |
 | 05 | `clean_patent_info.py` | Postprocesses and deduplicates extracted patent content. |
 
@@ -104,5 +88,4 @@ The pipeline constructs a patent-product pair dataset through five preprocessing
 
 
 ## Baseline Experiments
- 
 See [`experiments/README.md`](experiments/README.md) for instructions on running the text and multimodal retrieval baselines.

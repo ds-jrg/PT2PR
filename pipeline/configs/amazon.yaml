@@ -19,9 +19,9 @@ paths:
   examples:            data/processed/amazon/examples/example_set.json
   patent_cache:        data/interim/patent_cache
 
-checkpoints:
-  step_02: pipeline/checkpoints/amazon/step_02_manual_changes.jsonl
-  step_03: pipeline/checkpoints/amazon/step_03_manual_changes.jsonl
+review_steps:
+  step_02: pipeline/review_steps/amazon/step_02_manual_changes.jsonl
+  step_03: pipeline/review_steps/amazon/step_03_manual_changes.jsonl
 
 scraping:
   kind_codes_batch_size: 300

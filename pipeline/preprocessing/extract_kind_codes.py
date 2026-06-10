@@ -5,8 +5,8 @@ Kind codes (A1, B1, B2, …) identify the publication stage of a patent and are
 required by EPO and USPTO APIs downstream. This step fetches them by scraping
 the Google Patents page for each unique (country, patent_number) pair.
 
-After this step, a manual review checkpoint is applied (or awaited for new
-datasets). The checkpoint corrects wrong kind codes and removes pairs where
+After this step, a manual review is performed (or awaited for new
+datasets). The reviewed changes correct wrong kind codes and remove pairs where
 alignment between the patent and the product has been verified as spurious.
 """
 
@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Tuple
 import requests
 from bs4 import BeautifulSoup
-from pipeline.utils.checkpoint import CHECKPOINT_STOP, apply_checkpoint
+from pipeline.utils.manual_review import REVIEW_STOP, apply_reviewed_changes
 from pipeline.utils.io import read_jsonl, write_jsonl
 from pipeline.utils.stats import compute_and_save_stats
 
@@ -122,13 +122,13 @@ def _process_batch(batch: List[Dict], max_workers: int) -> List[Dict]:
 def extract_kind_codes(
     input_path: str,
     output_path: str,
-    checkpoint_path: Optional[str] = None,
+    reviewed_file_path: Optional[str] = None,
     batch_size: int = _DEFAULT_BATCH_SIZE,
     max_workers: int = _DEFAULT_MAX_WORKERS,
 ) -> List[Dict]:
     """
     Fetch kind codes for all patent-product pairs that are missing them,
-    apply the manual checkpoint, and write results.
+    apply the manual changes, and write results.
     """
     records = list(read_jsonl(input_path))
     logger.info(f"Loaded {len(records)} pairs from '{input_path}'.")
@@ -152,24 +152,24 @@ def extract_kind_codes(
         f"Kind code fetch complete: {succeeded}/{total} records have a kind code."
     )
 
-    # Apply manual checkpoint
-    if checkpoint_path:
-        result = apply_checkpoint(
-            enriched, checkpoint_path, step_label="03_extract_kind_codes"
+    # Apply manual review
+    if reviewed_file_path:
+        result = apply_reviewed_changes(
+            enriched, reviewed_file_path, step_label="03_extract_kind_codes"
         )
-        if result is CHECKPOINT_STOP:
+        if result is REVIEW_STOP:
             logger.error(
                 "\n"
                 "MANUAL REVIEW REQUIRED: Step 03\n"
                 f"Intermediate output written to: {output_path}\n"
-                f"Expected checkpoint file: {checkpoint_path}\n\n"
+                f"Expected reviewed file: {reviewed_file_path}\n\n"
                 "Review the intermediate output, save the corrected file as\n"
-                "the checkpoint at the path above, then re-run the pipeline.\n"
+                "the reviewed file at the path above, then re-run the pipeline.\n"
             )
             write_jsonl(enriched, output_path)
             sys.exit(1)
 
-        # Save pre-checkpoint stats so the automatic fetch results are also recorded
+        # Save pre-review stats so the automatic fetch results are also recorded
         compute_and_save_stats(
             enriched,
             output_path,
@@ -195,9 +195,9 @@ def _parse_args():
     )
     parser.add_argument("--output", required=True, help="Output JSONL path.")
     parser.add_argument(
-        "--checkpoint",
+        "--manual-review",
         default=None,
-        help="Path to manual checkpoint patch JSONL. Omit to skip checkpoint application.",
+        help="Path to manual reviewed patch JSONL. Omit to skip review application.",
     )
     parser.add_argument("--batch-size", type=int, default=_DEFAULT_BATCH_SIZE)
     parser.add_argument("--max-workers", type=int, default=_DEFAULT_MAX_WORKERS)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     extract_kind_codes(
         input_path=args.input,
         output_path=args.output,
-        checkpoint_path=args.checkpoint,
+        reviewed_file_path=args.manual_review,
         batch_size=args.batch_size,
         max_workers=args.max_workers,
     )

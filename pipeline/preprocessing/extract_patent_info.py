@@ -2,7 +2,7 @@
 Step 04: fetching full patent metadata from Google Patents.
 
 For each unique patent in the pairs file, fetches bibliographic data, abstract,
-description, claims, and image references. Results are cached in a local shelve
+description, claims, and image references. Results are cached in a local cached
 database so the step is resumable and re-runnable without re-fetching.
 """
 
@@ -10,7 +10,7 @@ import argparse
 import json
 import logging
 import re
-import shelve
+import diskcache
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -186,7 +186,7 @@ def _extract_patent_data(patent_id: str) -> Dict[str, Any]:
     return data
 
 
-def _cached_fetch(patent_id: str, cache: shelve.Shelf) -> Dict[str, Any]:
+def _cached_fetch(patent_id: str, cache: diskcache.Cache) -> Dict[str, Any]:
     if patent_id in cache:
         return cache[patent_id]
     data = _extract_patent_data(patent_id)
@@ -194,7 +194,7 @@ def _cached_fetch(patent_id: str, cache: shelve.Shelf) -> Dict[str, Any]:
     return data
 
 
-def _extract_record(record: Dict, cache: shelve.Shelf) -> Dict:
+def _extract_record(record: Dict, cache: diskcache.Cache) -> Dict:
     country = record.get("country_code", "")
     number = record.get("patent_number", "")
     kind = record.get("kind_code", "")
@@ -216,7 +216,7 @@ def _extract_record(record: Dict, cache: shelve.Shelf) -> Dict:
 
 
 def _process_batch(
-    batch: List[Dict], cache: shelve.Shelf, max_workers: int
+    batch: List[Dict], cache: diskcache.Cache, max_workers: int
 ) -> List[Dict]:
     results = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -251,7 +251,7 @@ def extract_patent_info(
 
     all_extracted: List[Dict] = []
 
-    with shelve.open(cache_path) as cache, open(
+    with diskcache.Cache(cache_path) as cache, open(
         output_path, "w", encoding="utf-8"
     ) as fout:
         for i in tqdm(range(0, total, batch_size), desc="Fetching patent data"):
@@ -285,7 +285,7 @@ def _parse_args():
     parser.add_argument(
         "--cache",
         required=True,
-        help="Path prefix for the shelve cache DB (e.g. data/interim/patent_cache).",
+        help="Path to the diskcache directory (e.g. data/interim/patent_cache).",
     )
     parser.add_argument("--batch-size", type=int, default=_DEFAULT_BATCH_SIZE)
     parser.add_argument("--max-workers", type=int, default=_DEFAULT_MAX_WORKERS)

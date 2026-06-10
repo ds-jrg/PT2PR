@@ -5,18 +5,18 @@ Runs all preprocessing and merging steps in sequence for a given dataset config.
 
 Steps:
     1) extract_raw_data: scan source catalog, filter patent mentions
-    2) extract_interim_pairs: parse patent numbers from product text [checkpoint]
-    3) extract_kind_codes: fetch kind codes from Google Patents [checkpoint]
+    2) extract_interim_pairs: parse patent numbers from product text [manual review step]
+    3) extract_kind_codes: fetch kind codes from Google Patents [manual review step]
     4) extract_patent_info: fetch full patent metadata
     5) clean_patent_info: remove partial duplicate claims
     6) build_full_dataset: merge patents + products, compute stats
     7) create_example_set: sample 20 examples for manual verification
 
-Checkpoints:
+Manual review steps:
     Steps 2 and 3 apply a manual patch file after automatic processing.
     - For the provided Amazon and ESCI datasets, patch files are committed to
-      the repo under pipeline/checkpoints/ and are applied automatically.
-    - For new datasets, the pipeline pauses at each checkpoint, writes the
+      the repo under pipeline/review_steps/ and are applied automatically.
+    - For new datasets, the pipeline pauses at each manual review step, writes the
       intermediate output, and prints instructions for creating the patch file.
       Re-run after creating the file to continue.
 """
@@ -68,21 +68,21 @@ def _run_step_1(cfg: dict) -> None:
 
 
 def _run_step_2(cfg: dict) -> None:
-    logger.info("STEP 2: extracting interim patent-product pairs [checkpoint]")
+    logger.info("STEP 2: extracting interim patent-product pairs [manual review step]")
     extract_interim_pairs(
         input_path=_require(cfg, "paths", "raw_products"),
         output_path=_require(cfg, "paths", "interim_pairs"),
-        checkpoint_path=cfg.get("checkpoints", {}).get("step_02"),
+        reviewed_file_path=cfg.get("review_steps", {}).get("step_02"),
     )
 
 
 def _run_step_3(cfg: dict) -> None:
-    logger.info("STEP 3: fetching kind codes from Google Patents [checkpoint]")
+    logger.info("STEP 3: fetching kind codes from Google Patents [manual review step]")
     scraping = cfg.get("scraping", {})
     extract_kind_codes(
         input_path=_require(cfg, "paths", "interim_pairs"),
         output_path=_require(cfg, "paths", "pairs_with_kinds"),
-        checkpoint_path=cfg.get("checkpoints", {}).get("step_03"),
+        reviewed_file_path=cfg.get("review_steps", {}).get("step_03"),
         batch_size=scraping.get("kind_codes_batch_size", 10),
         max_workers=scraping.get("kind_codes_max_workers", 5),
     )
@@ -169,7 +169,7 @@ def run_pipeline(
         try:
             runner(cfg)
         except SystemExit:
-            # A checkpoint stop
+            # A manual review stop
             # Reraise to propagate the exit code.
             raise
         except Exception as e:

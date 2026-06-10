@@ -5,8 +5,8 @@ Parses patent number mentions in product text fields (title, description,
 features) and produces one record per (product_id, patent_number) pair,
 with extracted country code, kind code, and the surrounding text span.
 
-After this step, a manual review checkpoint is applied (or awaited for new datasets).
-The checkpoint file corrects extraction errors: wrong country codes, missed numbers,
+After this step, a manual review is performed (or awaited for new datasets).
+The manually reviewed file corrects extraction errors: wrong country codes, missed numbers,
 spurious pairs, and so on.
 """
 
@@ -15,7 +15,7 @@ import logging
 import re
 import sys
 from typing import Dict, List, Optional
-from pipeline.utils.checkpoint import CHECKPOINT_STOP, apply_checkpoint
+from pipeline.utils.manual_review import REVIEW_STOP, apply_reviewed_changes
 from pipeline.utils.io import read_jsonl, write_jsonl
 from pipeline.utils.stats import compute_and_save_stats
 
@@ -155,11 +155,11 @@ def _process_product(record: Dict) -> List[Dict]:
 def extract_interim_pairs(
     input_path: str,
     output_path: str,
-    checkpoint_path: Optional[str] = None,
+    reviewed_file_path: Optional[str] = None,
 ) -> List[Dict]:
     """
     Extract (product_id, patent_number, country_code, kind_code, span_text) pairs
-    from the patented products JSONL, apply manual checkpoint corrections, and
+    from the patented products JSONL, apply manual corrections, and
     write the result.
     """
     records = list(read_jsonl(input_path))
@@ -171,27 +171,27 @@ def extract_interim_pairs(
 
     logger.info(f"Extracted {len(pairs)} initial pairs.")
 
-    # Apply manual checkpoint
-    if checkpoint_path:
-        result = apply_checkpoint(
-            pairs, checkpoint_path, step_label="02_extract_interim_pairs"
+    # Apply manual review changes if a reviewed file path is provided
+    if reviewed_file_path:
+        result = apply_reviewed_changes(
+            pairs, reviewed_file_path, step_label="02_extract_interim_pairs"
         )
-        if result is CHECKPOINT_STOP:
+        if result is REVIEW_STOP:
             logger.error(
                 "\n"
                 "MANUAL REVIEW REQUIRED: Step 02\n"
                 f"Intermediate output written to: {output_path}\n"
-                f"Expected checkpoint file: {checkpoint_path}\n\n"
+                f"Expected reviewed file: {reviewed_file_path}\n\n"
                 "Please review the intermediate output, make corrections,\n"
-                "and save the corrected file as the checkpoint at the path\n"
-                "above. See checkpoints/README.md for instructions.\n"
+                "and save the corrected file as the reviewed file at the path\n"
+                "above. See README.md for instructions.\n"
                 "Then re-run the pipeline.\n"
             )
             # Still write intermediate output so the user has something to review
             write_jsonl(pairs, output_path)
             sys.exit(1)
 
-        # Save pre-checkpoint stats so the automatic extraction is also recorded
+        # Save pre-review stats so the automatic extraction is also recorded
         compute_and_save_stats(
             pairs,
             output_path,
@@ -213,9 +213,9 @@ def _parse_args():
     parser.add_argument("--input", required=True, help="Step 01 output JSONL.")
     parser.add_argument("--output", required=True, help="Output JSONL path.")
     parser.add_argument(
-        "--checkpoint",
+        "--manual-review",
         default=None,
-        help="Path to manual checkpoint patch JSONL. Omit to skip checkpoint application.",
+        help="Path to manual reviewed patch JSONL. Omit to skip review application.",
     )
     parser.add_argument(
         "--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"]
@@ -232,5 +232,5 @@ if __name__ == "__main__":
     extract_interim_pairs(
         input_path=args.input,
         output_path=args.output,
-        checkpoint_path=args.checkpoint,
+        reviewed_file_path=args.manual_review,
     )
