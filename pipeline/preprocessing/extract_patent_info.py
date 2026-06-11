@@ -178,9 +178,9 @@ def _extract_patent_data(patent_id: str) -> Dict[str, Any]:
                 ]
 
     # Images
-    for img in soup.select("figure img[src]"):
-        src = img.get("src", "")
-        if src and not src.endswith((".svg", ".gif")):
+    for img in soup.select("img"):
+        src = img.get("src")
+        if src and "patent" in src.lower():
             data["images"].append(src)
 
     return data

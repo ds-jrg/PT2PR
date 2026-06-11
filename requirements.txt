@@ -4,6 +4,7 @@
 # PyTorch: bundled in requirements.txt for CUDA 12.4.
 # For a different CUDA version, change the --index-url on the torch/torchvision lines.
 # See https://pytorch.org for other versions.
+accelerate==1.13.0
 annotated-doc==0.0.4
 anyio==4.13.0
 beautifulsoup4==4.15.0
@@ -14,6 +15,7 @@ cuda-bindings==13.3.1
 cuda-pathfinder==1.5.5
 cuda-toolkit==13.0.2
 diskcache==5.6.3
+einops==0.8.2
 filelock==3.29.1
 fsspec==2026.4.0
 ftfy==6.3.1
@@ -59,6 +61,7 @@ nvidia-nvtx-cu12==12.4.127
 packaging==26.2
 pandas==3.0.3
 pillow==12.2.0
+psutil==7.2.2
 pyarrow==24.0.0
 Pygments==2.20.0
 python-dateutil==2.9.0.post0
@@ -71,7 +74,7 @@ rich==15.0.0
 safetensors==0.8.0
 scikit-learn==1.9.0
 scipy==1.17.1
-sentence-transformers==5.2.3
+sentence-transformers==5.4.1
 setuptools==81.0.0
 shellingham==1.5.4
 six==1.17.0
@@ -82,9 +85,10 @@ tokenizers==0.22.1
 torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
 tqdm==4.68.2
-transformers==5.2.0
+transformers==5.8.0
 triton==3.2.0
 typer==0.25.1
+typer-slim==0.24.0
 typing_extensions==4.15.0
 urllib3==2.7.0
 wcwidth==0.8.1

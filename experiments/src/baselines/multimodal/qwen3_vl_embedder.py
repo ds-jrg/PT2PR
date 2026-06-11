@@ -40,7 +40,7 @@ def run(
 
     print(f"Loading model {model_name}...")
     model = SentenceTransformer(
-        model_name, device="cuda", processor_kwargs={"padding_side": "left"}
+        model_name, device="cuda", tokenizer_kwargs={"padding_side": "left"}
     )
 
     def _build_inputs(entity_ids, get_text_fn, get_image_path_fn, label: str):

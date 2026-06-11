@@ -32,7 +32,7 @@ def run(
 
     print(f"Loading model {model_name}...")
     model = SentenceTransformer(
-        model_name, device="cuda", processor_kwargs={"padding_side": "left"}
+        model_name, device="cuda", tokenizer_kwargs={"padding_side": "left"}
     )
 
     # Encode full product corpus as passages (no prompt)

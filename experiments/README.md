@@ -43,11 +43,11 @@ python -m experiments.src.baselines.run --setting text
 ### Multimodal setting
 
 ```bash
-python -m experiments.src.baselines.run --setting multimodal \
+python -m experiments.src.baselines.run --dataset amazon --setting multimodal \
     --visual-assets-dir <your_visual_assets_dir>
 ```
 
-### Both settings at once
+### Both datasets and settings at once
 
 ```bash
 python -m experiments.src.baselines.run --setting both \

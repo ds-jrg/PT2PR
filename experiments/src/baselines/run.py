@@ -135,7 +135,11 @@ def main():
             run_text_setting(dataset, args.no_mask)
 
         if args.setting in ("multimodal", "both"):
-            run_multimodal_setting(dataset, args.visual_assets_dir, args.no_mask)
+            assets_path = Path(args.visual_assets_dir) / dataset
+            if not assets_path.exists():
+                print(f"[INFO] Skipping multimodal for '{dataset}': {assets_path} not found.")
+            else:
+                run_multimodal_setting(dataset, args.visual_assets_dir, args.no_mask)
 
     print("\nAll experiments complete.")
     print(f"Results written under: {_RESULTS_ROOT}/")
