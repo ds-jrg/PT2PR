@@ -11,6 +11,7 @@ from experiments.src.baselines.text import (
     patentsberta,
     bge,
     all_mpnet,
+    nemotron,
 )
 from experiments.src.baselines.multimodal import qwen3_vl_embedder as qwen3_vl, bge_vl
 
@@ -48,6 +49,7 @@ def run_text_setting(dataset: str, no_mask: bool):
     patentsberta.run(**shared)
     bge.run(**shared)
     qwen3_embedder.run(**shared)
+    nemotron.run(**shared)
 
 
 def run_multimodal_setting(dataset: str, visual_assets_dir: str, no_mask: bool):
